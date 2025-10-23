@@ -20,29 +20,56 @@ def vending_machine(request):
 def process_purchase(request):
     if request.method == 'POST':
         try:
+            print("=== PURCHASE REQUEST STARTED ===")
+            
             product_id = request.POST.get('product_id')
             quantity = int(request.POST.get('quantity', 1))
             denominations_data = request.POST.get('denominations', '{}')
             
-            print(f"Processing purchase: {product_id}, quantity: {quantity}")  # Debug
+            print(f"Product ID: {product_id}")
+            print(f"Quantity: {quantity}")
+            print(f"Denominations data: {denominations_data}")
+            
+            # Check if we have any products in database
+            total_products = Product.objects.count()
+            print(f"Total products in database: {total_products}")
+            
+            if total_products == 0:
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': 'No products available in database! Please add products first.'
+                })
             
             # Parse denominations
             denominations = json.loads(denominations_data)
-            print(f"Denominations: {denominations}")  # Debug
+            print(f"Parsed denominations: {denominations}")
             
             # Get product
-            product = Product.objects.get(product_id=product_id)
-            print(f"Product found: {product.name}, Price: {product.price}, Stock: {product.quantity}")  # Debug
+            try:
+                product = Product.objects.get(product_id=product_id)
+                print(f"Product found: {product.name}, Price: {product.price}, Stock: {product.quantity}")
+            except Product.DoesNotExist:
+                print(f"Product with ID {product_id} not found!")
+                # List available products for debugging
+                available_products = Product.objects.all()
+                print("Available products:")
+                for p in available_products:
+                    print(f"  - {p.product_id}: {p.name} (Rs {p.price})")
+                
+                return JsonResponse({
+                    'status': 'error', 
+                    'message': f'Product not found! Available products: {list(available_products.values_list("product_id", flat=True))}'
+                })
             
             # Calculate required amount (in rupees, not cents)
             required_amount = float(product.price * quantity)
-            print(f"Required amount: {required_amount}")  # Debug
+            print(f"Required amount: {required_amount}")
             
             # Calculate inserted amount (in rupees)
             inserted_amount = 0
             for denom, count in denominations.items():
                 inserted_amount += int(denom) * int(count)
-            print(f"Inserted amount: {inserted_amount}")  # Debug
+            print(f"Inserted amount: {inserted_amount}")
             
             # Check if enough money inserted
             if inserted_amount < required_amount:
@@ -60,11 +87,12 @@ def process_purchase(request):
             
             # Calculate change
             change = inserted_amount - required_amount
-            print(f"Change to return: {change}")  # Debug
+            print(f"Change to return: {change}")
             
             # Update product quantity
             product.quantity -= quantity
             product.save()
+            print(f"Updated product stock: {product.quantity}")
             
             # Create transaction
             transaction = Transaction.objects.create(
@@ -72,6 +100,7 @@ def process_purchase(request):
                 amount_required=required_amount,
                 change_returned=change
             )
+            print(f"Transaction created: {transaction.id}")
             
             # Create denomination logs
             for denom, count in denominations.items():
@@ -85,6 +114,7 @@ def process_purchase(request):
             
             # Calculate change denominations
             change_denominations = calculate_change_denominations(change)
+            print(f"Change denominations: {change_denominations}")
             
             # Create change denomination logs
             for denom, count in change_denominations.items():
@@ -106,6 +136,8 @@ def process_purchase(request):
             transaction.set_products_purchased(purchased_products)
             transaction.save()
             
+            print("=== PURCHASE SUCCESSFUL ===")
+            
             return JsonResponse({
                 'status': 'success',
                 'message': f'Enjoy your {product.name}!',
@@ -113,11 +145,18 @@ def process_purchase(request):
                 'change_denominations': change_denominations
             })
             
-        except Product.DoesNotExist:
-            return JsonResponse({'status': 'error', 'message': 'Product not found!'})
         except Exception as e:
-            print(f"Error: {str(e)}")  # Debug
-            return JsonResponse({'status': 'error', 'message': f'Server error: {str(e)}'})
+            print(f"=== ERROR IN PROCESS_PURCHASE ===")
+            print(f"Error type: {type(e).__name__}")
+            print(f"Error message: {str(e)}")
+            import traceback
+            print(f"Traceback: {traceback.format_exc()}")
+            print("=== END ERROR ===")
+            
+            return JsonResponse({
+                'status': 'error', 
+                'message': f'Server error: {str(e)}'
+            })
     
     return JsonResponse({'status': 'error', 'message': 'Invalid request'})
 
@@ -139,6 +178,7 @@ def calculate_change_denominations(change_amount):
             remaining %= denom
     
     return change_denominations
+
 def transaction_history(request):
     """
     Big Data: Display all transactions with detailed denomination logs

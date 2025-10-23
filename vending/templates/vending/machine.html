@@ -636,6 +636,7 @@
     </style>
 </head>
 <body>
+    {% csrf_token %}
     <div class="container">
         <div class="header">
             <h1 class="title">🍕 VENDING MACHINE 🍔</h1>
@@ -841,7 +842,6 @@
     </div>
 
     <script>
-    // JavaScript code remains exactly the same as original
     let selectedProduct = null;
     let selectedProductName = null;
     let selectedProductPrice = null;
@@ -909,10 +909,12 @@
             return;
         }
 
+        // Create form data with CSRF token
         const formData = new FormData();
         formData.append('product_id', productId);
         formData.append('quantity', quantity);
         formData.append('denominations', JSON.stringify(denominations));
+        formData.append('csrfmiddlewaretoken', getCookie('csrftoken'));
 
         console.log('Sending purchase request...', {
             productId, productName: selectedProductName, 
@@ -928,7 +930,7 @@
         })
         .then(response => {
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                throw new Error(`HTTP error! status: ${response.status}`);
             }
             return response.json();
         })
@@ -945,7 +947,7 @@
         })
         .catch(error => {
             console.error('Error details:', error);
-            showMessage('Server error! Please check if the server is running.', 'error');
+            showMessage('Server error! ' + error.message, 'error');
         });
     }
 
