@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: vending-machine
+    env: python
+    plan: free
+    buildCommand: "./build.sh"
+    startCommand: "gunicorn your_project_name.wsgi:application"
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
+
+databases:
+  - name: vending-machine-db
+    plan: free
