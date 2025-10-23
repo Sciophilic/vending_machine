@@ -14,7 +14,7 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=5, decimal_places=2)
     quantity = models.IntegerField(default=0)
     product_type = models.CharField(max_length=10, choices=PRODUCT_TYPES)
-    image = models.ImageField(upload_to='products/', blank=True, null=True)
+    image = models.CharField(max_length=200, blank=True, null=True)
     
     def __str__(self):
         return f"{self.product_id} - {self.name}"
