@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vending Machine</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/simple.css' %}">
+    <style>
+        /* Serene Vintage Color Palette */
+        :root {
+            --vintage-cream: #F5F1E6;
+            --soft-peach: #FFE5D4;
+            --terra-cotta: #E27D60;
+            --warm-beige: #D8C3A5;
+            --dusty-rose: #D8A48F;
+            --muted-green: #A8C0A8;
+            --deep-brown: #8B7355;
+        }
+        
+        body {
+            background-color: var(--vintage-cream);
+            color: var(--deep-brown);
+            font-family: 'Georgia', serif;
+        }
+
+        /* Floating Emojis Styles */
+        .floating-emojis {
+            position: relative;
+            height: 80px;
+            margin: 25px 0;
+        }
+        
+        .floating-emoji {
+            position: absolute;
+            font-size: 1.8em;
+            animation: float 3s ease-in-out infinite;
+            opacity: 0.9;
+            filter: drop-shadow(0 0 6px rgba(139, 115, 85, 0.4));
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-25px) rotate(15deg);
+            }
+        }
+        
+        /* Individual emoji animations with different timings */
+        .emoji-1 { left: 5%; animation-delay: 0s; }
+        .emoji-2 { left: 15%; animation-delay: 0.3s; }
+        .emoji-3 { left: 25%; animation-delay: 0.6s; }
+        .emoji-4 { left: 35%; animation-delay: 0.9s; }
+        .emoji-5 { left: 45%; animation-delay: 1.2s; }
+        .emoji-6 { left: 55%; animation-delay: 1.5s; }
+        .emoji-7 { left: 65%; animation-delay: 1.8s; }
+        .emoji-8 { left: 75%; animation-delay: 2.1s; }
+        .emoji-9 { left: 85%; animation-delay: 2.4s; }
+        .emoji-10 { left: 95%; animation-delay: 2.7s; }
+        
+        .welcome-message {
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(135deg, var(--soft-peach), var(--dusty-rose));
+            color: var(--deep-brown);
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            font-weight: bold;
+            margin: 20px 0;
+            font-size: 1.1em;
+            box-shadow: 0 4px 15px rgba(139, 115, 85, 0.1);
+            border: 1px solid var(--warm-beige);
+        }
+
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, var(--warm-beige), var(--soft-peach));
+            color: var(--deep-brown);
+            padding: 35px;
+            border-radius: 20px;
+            margin-bottom: 25px;
+            box-shadow: 0 8px 25px rgba(139, 115, 85, 0.2);
+            text-align: center;
+            border: 3px solid var(--terra-cotta);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--terra-cotta), var(--dusty-rose), var(--muted-green), var(--terra-cotta));
+            animation: shimmer 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0%, 100% { transform: translateX(-100%); }
+            50% { transform: translateX(100%); }
+        }
+
+        .title {
+            color: var(--deep-brown);
+            font-size: 2.8em;
+            margin-bottom: 15px;
+            font-weight: bold;
+            text-shadow: 2px 2px 4px rgba(139, 115, 85, 0.1);
+        }
+
+        .title span {
+            color: var(--terra-cotta);
+            font-size: 1.2em;
+            margin: 0 8px;
+        }
+
+        .subtitle {
+            color: var(--terra-cotta);
+            font-size: 1.5em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            font-style: italic;
+        }
+
+        .subtitle span {
+            color: var(--muted-green);
+            margin: 0 5px;
+        }
+
+        /* Compact Product Grid - 5 items per row */
+        .product-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        /* Smaller Product Cards */
+        .product-card {
+            background: linear-gradient(135deg, var(--vintage-cream), var(--soft-peach));
+            border: 2px solid var(--warm-beige);
+            padding: 15px;
+            border-radius: 12px;
+            transition: all 0.3s ease;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 3px 10px rgba(139, 115, 85, 0.1);
+            min-height: 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .product-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 18px rgba(226, 125, 96, 0.2);
+            border-color: var(--terra-cotta);
+        }
+
+        .product-card.out-of-stock {
+            opacity: 0.5;
+            border-color: var(--dusty-rose);
+        }
+
+        .product-card.out-of-stock:hover {
+            box-shadow: 0 6px 18px rgba(216, 164, 143, 0.2);
+        }
+
+        .product-id {
+            background: linear-gradient(135deg, var(--terra-cotta), var(--dusty-rose));
+            color: var(--vintage-cream);
+            padding: 5px 10px;
+            border-radius: 15px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 8px;
+            font-size: 0.8em;
+            box-shadow: 0 2px 6px rgba(226, 125, 96, 0.3);
+        }
+
+        .product-name {
+            color: var(--deep-brown);
+            font-size: 0.9em;
+            margin: 8px 0;
+            font-weight: 600;
+            line-height: 1.2;
+        }
+
+        .product-price {
+            color: var(--terra-cotta);
+            font-size: 1em;
+            font-weight: bold;
+            margin: 6px 0;
+        }
+
+        .product-quantity {
+            color: var(--muted-green);
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .out-of-stock-label {
+            color: var(--dusty-rose);
+            font-size: 0.75em;
+            font-weight: bold;
+            margin-top: 6px;
+            text-transform: uppercase;
+        }
+
+        /* Admin Panel Styles */
+        .admin-panel {
+            background: linear-gradient(135deg, var(--warm-beige), var(--soft-peach));
+            border: 2px solid var(--terra-cotta);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+            color: var(--deep-brown);
+            box-shadow: 0 6px 20px rgba(139, 115, 85, 0.15);
+        }
+
+        .admin-panel h2 {
+            color: var(--terra-cotta);
+            text-align: center;
+            margin-bottom: 25px;
+            font-size: 1.6em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+
+        .admin-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .admin-btn {
+            background: linear-gradient(135deg, var(--terra-cotta), var(--dusty-rose));
+            color: var(--vintage-cream);
+            border: none;
+            padding: 14px 22px;
+            border-radius: 10px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            text-align: center;
+            min-width: 150px;
+            box-shadow: 0 3px 10px rgba(226, 125, 96, 0.3);
+            border: 1px solid var(--warm-beige);
+        }
+
+        .admin-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(226, 125, 96, 0.4);
+            background: linear-gradient(135deg, var(--dusty-rose), var(--terra-cotta));
+        }
+
+        .admin-btn.secondary {
+            background: linear-gradient(135deg, var(--muted-green), #95B095);
+            box-shadow: 0 3px 10px rgba(168, 192, 168, 0.3);
+        }
+
+        .admin-btn.secondary:hover {
+            box-shadow: 0 5px 15px rgba(168, 192, 168, 0.4);
+            background: linear-gradient(135deg, #95B095, var(--muted-green));
+        }
+
+        /* Purchase Interface Styles */
+        .input-section {
+            background: linear-gradient(135deg, var(--vintage-cream), var(--soft-peach));
+            border: 2px solid var(--warm-beige);
+            border-radius: 15px;
+            padding: 25px;
+            margin: 30px 0;
+            box-shadow: 0 5px 18px rgba(139, 115, 85, 0.1);
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .label {
+            color: var(--deep-brown);
+            font-weight: bold;
+            display: block;
+            margin-bottom: 8px;
+            font-size: 1em;
+        }
+
+        .input {
+            background: var(--vintage-cream);
+            border: 2px solid var(--warm-beige);
+            border-radius: 8px;
+            padding: 12px 15px;
+            width: 100%;
+            color: var(--deep-brown);
+            font-size: 1em;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 5px rgba(139, 115, 85, 0.1);
+        }
+
+        .input:focus {
+            border-color: var(--terra-cotta);
+            box-shadow: 0 0 8px rgba(226, 125, 96, 0.2);
+            outline: none;
+        }
+
+        .button {
+            background: linear-gradient(135deg, var(--terra-cotta), var(--dusty-rose));
+            color: var(--vintage-cream);
+            border: none;
+            padding: 14px 25px;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 12px;
+            box-shadow: 0 3px 10px rgba(226, 125, 96, 0.3);
+            border: 1px solid var(--warm-beige);
+        }
+
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(226, 125, 96, 0.4);
+            background: linear-gradient(135deg, var(--dusty-rose), var(--terra-cotta));
+        }
+
+        .button.secondary {
+            background: linear-gradient(135deg, var(--muted-green), #95B095);
+            box-shadow: 0 3px 10px rgba(168, 192, 168, 0.3);
+        }
+
+        .button.secondary:hover {
+            box-shadow: 0 5px 15px rgba(168, 192, 168, 0.4);
+            background: linear-gradient(135deg, #95B095, var(--muted-green));
+        }
+
+        /* Denomination Panel */
+        .denomination-panel {
+            background: linear-gradient(135deg, var(--soft-peach), var(--vintage-cream));
+            border: 2px solid var(--warm-beige);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 25px 0;
+            box-shadow: 0 4px 12px rgba(139, 115, 85, 0.1);
+        }
+
+        .denomination-title {
+            color: var(--deep-brown);
+            text-align: center;
+            margin-bottom: 15px;
+            font-size: 1.2em;
+            font-weight: bold;
+        }
+
+        .denomination-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(85px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .denom-btn {
+            background: linear-gradient(135deg, var(--terra-cotta), var(--dusty-rose));
+            color: var(--vintage-cream);
+            padding: 10px;
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 6px rgba(226, 125, 96, 0.3);
+            border: 1px solid var(--warm-beige);
+        }
+
+        .denom-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(226, 125, 96, 0.4);
+            background: linear-gradient(135deg, var(--dusty-rose), var(--terra-cotta));
+        }
+
+        .amount-display {
+            background: linear-gradient(135deg, var(--warm-beige), var(--soft-peach));
+            color: var(--deep-brown);
+            padding: 12px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1.1em;
+            margin-top: 15px;
+            box-shadow: 0 3px 8px rgba(139, 115, 85, 0.1);
+            border: 1px solid var(--terra-cotta);
+        }
+
+        .denom-count {
+            color: var(--terra-cotta);
+            font-weight: bold;
+        }
+
+        /* Receipt Styles - CHANGED TO BLACK TEXT */
+        .receipt {
+            background: linear-gradient(135deg, var(--vintage-cream), var(--soft-peach));
+            border: 2px solid var(--warm-beige);
+            border-radius: 12px;
+            padding: 25px;
+            margin: 25px 0;
+            display: none;
+            box-shadow: 0 5px 15px rgba(139, 115, 85, 0.15);
+            font-family: 'Georgia', serif;
+            color: #000000; /* Changed to black */
+        }
+
+        .receipt-header {
+            text-align: center;
+            border-bottom: 2px dashed var(--terra-cotta);
+            padding-bottom: 15px;
+            margin-bottom: 15px;
+            color: #000000; /* Changed to black */
+        }
+
+        .receipt-title {
+            font-weight: bold;
+            font-size: 1.3em;
+            color: #000000; /* Changed to black */
+            margin-bottom: 5px;
+        }
+
+        .receipt-details {
+            margin: 15px 0;
+            color: #000000; /* Changed to black */
+        }
+
+        .receipt-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px dotted var(--warm-beige);
+            color: #000000; /* Changed to black */
+        }
+
+        .receipt-footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 2px dashed var(--terra-cotta);
+            color: #000000; /* Changed to black */
+            font-style: italic;
+        }
+
+        /* Change Display */
+        .change-display {
+            background: linear-gradient(135deg, var(--muted-green), #95B095);
+            color: var(--vintage-cream);
+            border-radius: 12px;
+            padding: 20px;
+            margin: 25px 0;
+            text-align: center;
+            display: none;
+            box-shadow: 0 5px 15px rgba(168, 192, 168, 0.3);
+            border: 2px solid var(--warm-beige);
+        }
+
+        .change-title {
+            font-size: 1.2em;
+            margin-bottom: 10px;
+            font-weight: bold;
+        }
+
+        .change-amount {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        /* Message Styles */
+        .message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-weight: bold;
+            text-align: center;
+        }
+
+        .message.success {
+            background: linear-gradient(135deg, var(--muted-green), #95B095);
+            color: var(--vintage-cream);
+        }
+
+        .message.error {
+            background: linear-gradient(135deg, var(--dusty-rose), #D89F8F);
+            color: var(--vintage-cream);
+        }
+
+        /* Section title adjustments */
+        .section-title {
+            color: var(--deep-brown);
+            border-bottom: 3px solid var(--terra-cotta);
+            padding-bottom: 10px;
+            margin: 30px 0 15px 0;
+            font-size: 1.5em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: bold;
+        }
+
+        .section-emoji {
+            font-size: 1.2em;
+            margin-right: 8px;
+        }
+
+        /* History Button */
+        .history-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--terra-cotta), var(--dusty-rose));
+            color: var(--vintage-cream);
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(226, 125, 96, 0.3);
+            border: 1px solid var(--warm-beige);
+        }
+
+        .history-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(226, 125, 96, 0.4);
+            background: linear-gradient(135deg, var(--dusty-rose), var(--terra-cotta));
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 1200px) {
+            .product-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+
+        @media (max-width: 992px) {
+            .product-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 12px;
+                margin: 15px 0;
+                padding: 0 10px;
+                width: 100%;
+                box-sizing: border-box;
+            }
+            
+            .admin-buttons {
+                gap: 10px;
+            }
+            
+            .admin-btn {
+                min-width: 130px;
+                padding: 12px 18px;
+                font-size: 0.9em;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .product-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 10px;
+                margin: 12px 0;
+            }
+            
+            .product-card {
+                padding: 12px;
+                min-height: 110px;
+            }
+            
+            .product-name {
+                font-size: 0.85em;
+            }
+            
+            .product-price {
+                font-size: 0.9em;
+            }
+            
+            .admin-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+            
+            .admin-btn {
+                width: 100%;
+                max-width: 250px;
+            }
+            
+            .denomination-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+            
+            .floating-emojis {
+                height: 60px;
+            }
+            
+            .floating-emoji {
+                font-size: 1.4em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .product-grid {
+                grid-template-columns: 1fr;
+                gap: 8px;
+            }
+            
+            .product-card {
+                padding: 10px;
+                min-height: 100px;
+            }
+            
+            .denomination-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+            
+            .title {
+                font-size: 2em;
+            }
+            
+            .floating-emojis {
+                height: 50px;
+            }
+            
+            .floating-emoji {
+                font-size: 1.2em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1 class="title">🍕 VENDING MACHINE 🍔</h1>
+            <p class="subtitle">📍 Ebene Campus 🏫</p>
+            <!-- HISTORY BUTTON ADDED HERE -->
+            <div style="text-align: center; margin-top: 15px;">
+                <a href="/history/" class="history-btn">
+                   📊 View Transaction History
+                </a>
+            </div>
+        </div>
+
+        <!-- Floating Emojis Container -->
+        <div class="floating-emojis">
+            <div class="floating-emoji emoji-1">🍕</div>
+            <div class="floating-emoji emoji-2">🍔</div>
+            <div class="floating-emoji emoji-3">🌭</div>
+            <div class="floating-emoji emoji-4">🥪</div>
+            <div class="floating-emoji emoji-5">🍦</div>
+            <div class="floating-emoji emoji-6">🍩</div>
+            <div class="floating-emoji emoji-7">🧁</div>
+            <div class="floating-emoji emoji-8">🍪</div>
+            <div class="floating-emoji emoji-9">🥤</div>
+            <div class="floating-emoji emoji-10">☕</div>
+        </div>
+
+        <div class="welcome-message">
+            🎉 Welcome to the Vending Machine! Please select your items below.
+        </div>
+
+        <!-- Admin Panel Section -->
+        <div class="admin-panel">
+            <h2>🔧 ADMIN PANEL</h2>
+            <div class="admin-buttons">
+                <a href="/admin/" class="admin-btn" target="_blank">
+                    📊 Django Admin
+                </a>
+                <a href="/admin/vending/product/" class="admin-btn" target="_blank">
+                    📦 Manage Products
+                </a>
+                <a href="/admin/vending/transaction/" class="admin-btn" target="_blank">
+                    💰 View Transactions
+                </a>
+                <a href="/admin/vending/product/add/" class="admin-btn secondary" target="_blank">
+                    ➕ Add New Product
+                </a>
+            </div>
+        </div>
+
+        <!-- 🎂 Cakes Section -->
+        <div class="product-section">
+            <h2 class="section-title"><span class="section-emoji">🎂</span>CAKES</h2>
+            <div class="product-grid">
+                {% for product in cakes %}
+                <div class="product-card {% if not product.is_available %}out-of-stock{% endif %}" 
+                     onclick="selectProduct('{{ product.product_id }}', '{{ product.name }}', {{ product.price }}, {{ product.quantity }})">
+                    <div class="product-id">#{{ product.product_id }}</div>
+                    <div class="product-name">{{ product.name }}</div>
+                    <div class="product-price">Rs {{ product.price }}</div>
+                    {% if product.is_available %}
+                        <div class="product-quantity">Stock: {{ product.quantity }}</div>
+                    {% else %}
+                        <div class="out-of-stock-label">OUT OF STOCK</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 🍫 Chocolates Section -->
+        <div class="product-section">
+            <h2 class="section-title"><span class="section-emoji">🍫</span>CHOCOLATES</h2>
+            <div class="product-grid">
+                {% for product in chocolates %}
+                <div class="product-card {% if not product.is_available %}out-of-stock{% endif %}" 
+                     onclick="selectProduct('{{ product.product_id }}', '{{ product.name }}', {{ product.price }}, {{ product.quantity }})">
+                    <div class="product-id">#{{ product.product_id }}</div>
+                    <div class="product-name">{{ product.name }}</div>
+                    <div class="product-price">Rs {{ product.price }}</div>
+                    {% if product.is_available %}
+                        <div class="product-quantity">Stock: {{ product.quantity }}</div>
+                    {% else %}
+                        <div class="out-of-stock-label">OUT OF STOCK</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- 🥤 Drinks Section -->
+        <div class="product-section">
+            <h2 class="section-title"><span class="section-emoji">🥤</span>SOFT DRINKS</h2>
+            <div class="product-grid">
+                {% for product in drinks %}
+                <div class="product-card {% if not product.is_available %}out-of-stock{% endif %}" 
+                     onclick="selectProduct('{{ product.product_id }}', '{{ product.name }}', {{ product.price }}, {{ product.quantity }})">
+                    <div class="product-id">#{{ product.product_id }}</div>
+                    <div class="product-name">{{ product.name }}</div>
+                    <div class="product-price">Rs {{ product.price }}</div>
+                    {% if product.is_available %}
+                        <div class="product-quantity">Stock: {{ product.quantity }}</div>
+                    {% else %}
+                        <div class="out-of-stock-label">OUT OF STOCK</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Purchase Interface -->
+        <div class="input-section">
+            <h2 class="section-title">🛒 PURCHASE INTERFACE</h2>
+            
+            <div class="input-group">
+                <label class="label">Product ID:</label>
+                <input type="text" id="product_id" class="input" placeholder="Enter Product ID">
+            </div>
+
+            <div class="input-group">
+                <label class="label">Quantity:</label>
+                <input type="number" id="quantity" class="input" value="1" min="1">
+            </div>
+
+            <!-- Money Insertion -->
+            <div class="denomination-panel">
+                <h3 class="denomination-title">💰 INSERT MONEY</h3>
+                <p style="text-align: center; margin-bottom: 15px; color: var(--deep-brown);">Click on notes/coins to add money</p>
+                <div class="denomination-grid">
+                    <div class="denom-btn" onclick="addDenomination(500)">Rs 500</div>
+                    <div class="denom-btn" onclick="addDenomination(200)">Rs 200</div>
+                    <div class="denom-btn" onclick="addDenomination(100)">Rs 100</div>
+                    <div class="denom-btn" onclick="addDenomination(50)">Rs 50</div>
+                    <div class="denom-btn" onclick="addDenomination(20)">Rs 20</div>
+                    <div class="denom-btn" onclick="addDenomination(10)">Rs 10</div>
+                    <div class="denom-btn" onclick="addDenomination(5)">Rs 5</div>
+                </div>
+                <div class="amount-display">
+                    Total Inserted: Rs <span id="total_amount">0</span>
+                </div>
+                <div id="denomination_counts" style="text-align: center; margin-top: 10px; color: var(--deep-brown);"></div>
+            </div>
+
+            <div class="input-group">
+                <button class="button" onclick="processPurchase()">✅ BUY NOW</button>
+                <button class="button secondary" onclick="resetInterface()">🔄 RESET</button>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div id="message_area"></div>
+
+        <!-- Receipt Display - TEXT NOW BLACK FOR BETTER READABILITY -->
+        <div id="receipt" class="receipt">
+            <div class="receipt-header">
+                <div class="receipt-title">🍕 VENDING MACHINE 🍔</div>
+                <div>📍 Ebene Campus 🏫</div>
+                <div id="receipt_datetime"></div>
+                <div style="margin-top: 10px; border-top: 1px dashed var(--terra-cotta); padding-top: 10px;">RECEIPT</div>
+            </div>
+            
+            <div class="receipt-details">
+                <div class="receipt-item">
+                    <span><strong>Product ID:</strong></span>
+                    <span id="receipt_product_id">-</span>
+                </div>
+                <div class="receipt-item">
+                    <span><strong>Product Name:</strong></span>
+                    <span id="receipt_product_name">-</span>
+                </div>
+                <div class="receipt-item">
+                    <span><strong>Quantity:</strong></span>
+                    <span id="receipt_quantity">-</span>
+                </div>
+                <div class="receipt-item">
+                    <span><strong>Unit Price:</strong></span>
+                    <span id="receipt_unit_price">-</span>
+                </div>
+                <div class="receipt-item" style="border-top: 1px solid var(--warm-beige); padding-top: 8px;">
+                    <span><strong>Total Amount:</strong></span>
+                    <span id="receipt_total">-</span>
+                </div>
+                <div class="receipt-item">
+                    <span><strong>Amount Paid:</strong></span>
+                    <span id="receipt_paid">-</span>
+                </div>
+                <div class="receipt-item" style="border-top: 1px solid var(--warm-beige); padding-top: 8px;">
+                    <span><strong>Change Returned:</strong></span>
+                    <span id="receipt_change">-</span>
+                </div>
+            </div>
+            
+            <div class="receipt-footer">
+                <div style="margin-bottom: 10px;">Thank you for your purchase! 😊</div>
+                <div>Have a great day!</div>
+            </div>
+        </div>
+
+        <!-- Change Display -->
+        <div id="change_display" class="change-display">
+            <div class="change-title">💰 CHANGE RETURNED</div>
+            <div class="change-amount">Rs <span id="change_amount">0</span></div>
+        </div>
+    </div>
+
+    <script>
+    // JavaScript code remains exactly the same as original
+    let selectedProduct = null;
+    let selectedProductName = null;
+    let selectedProductPrice = null;
+    let denominations = {
+        500: 0, 200: 0, 100: 0, 50: 0, 20: 0, 10: 0, 5: 0
+    };
+
+    function selectProduct(productId, productName, price, quantity) {
+        document.getElementById('product_id').value = productId;
+        selectedProduct = productId;
+        selectedProductName = productName;
+        selectedProductPrice = parseFloat(price);
+        
+        console.log('Product Selected:', {
+            productId, productName, price: selectedProductPrice, quantity
+        });
+        
+        // Highlight selected product
+        document.querySelectorAll('.product-card').forEach(card => {
+            card.style.borderColor = 'var(--warm-beige)';
+        });
+        event.currentTarget.style.borderColor = 'var(--terra-cotta)';
+        
+        showMessage(`Selected: ${productName} (ID: ${productId}) - Rs ${price} (Stock: ${quantity})`, 'success');
+    }
+
+    function addDenomination(denom) {
+        denominations[denom]++;
+        updateDenominationDisplay();
+    }
+
+    function updateDenominationDisplay() {
+        let total = 0;
+        let denomText = '';
+        
+        for (const [denom, count] of Object.entries(denominations)) {
+            if (count > 0) {
+                total += parseInt(denom) * count;
+                denomText += `Rs ${denom}: <span class="denom-count">${count}</span> | `;
+            }
+        }
+        
+        document.getElementById('total_amount').textContent = total.toFixed(2);
+        document.getElementById('denomination_counts').innerHTML = denomText ? 'Inserted: ' + denomText.slice(0, -3) : '';
+    }
+
+    function processPurchase() {
+        const productId = document.getElementById('product_id').value;
+        const quantity = parseInt(document.getElementById('quantity').value);
+        
+        if (!productId) {
+            showMessage('Please select a product!', 'error');
+            return;
+        }
+
+        if (!selectedProductName || !selectedProductPrice) {
+            showMessage('Please select a product by clicking on it!', 'error');
+            return;
+        }
+
+        // Check if money was inserted
+        const totalInserted = calculateTotalInserted();
+        if (totalInserted === 0) {
+            showMessage('Please insert money first!', 'error');
+            return;
+        }
+
+        const formData = new FormData();
+        formData.append('product_id', productId);
+        formData.append('quantity', quantity);
+        formData.append('denominations', JSON.stringify(denominations));
+
+        console.log('Sending purchase request...', {
+            productId, productName: selectedProductName, 
+            price: selectedProductPrice, quantity, totalInserted
+        });
+
+        fetch('/process_purchase/', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken')
+            }
+        })
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
+        .then(data => {
+            console.log('Purchase response:', data);
+            if (data.status === 'success') {
+                showMessage('Purchase successful! ' + data.message, 'success');
+                displayReceipt(productId, selectedProductName, selectedProductPrice, quantity, data);
+                displayChange(data.change);
+                resetDenominations();
+            } else {
+                showMessage('Error: ' + data.message, 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error details:', error);
+            showMessage('Server error! Please check if the server is running.', 'error');
+        });
+    }
+
+    function calculateTotalInserted() {
+        let total = 0;
+        for (const [denom, count] of Object.entries(denominations)) {
+            total += parseInt(denom) * count;
+        }
+        return total;
+    }
+
+    function displayReceipt(productId, productName, unitPrice, quantity, data) {
+        const receipt = document.getElementById('receipt');
+        
+        // Ensure all values are numbers
+        const unitPriceNum = parseFloat(unitPrice);
+        const quantityNum = parseInt(quantity);
+        const changeNum = parseFloat(data.change);
+        
+        // Calculate amounts
+        const totalAmount = unitPriceNum * quantityNum;
+        const paidAmount = totalAmount + changeNum;
+        
+        console.log('Receipt Calculation:', {
+            productId, productName, unitPriceNum, quantityNum,
+            totalAmount, paidAmount, changeNum
+        });
+        
+        // Set current date and time
+        const now = new Date();
+        const options = { 
+            year: 'numeric', 
+            month: '2-digit', 
+            day: '2-digit',
+            hour: '2-digit', 
+            minute: '2-digit', 
+            second: '2-digit'
+        };
+        document.getElementById('receipt_datetime').textContent = now.toLocaleDateString('en-GB', options);
+        
+        // Fill receipt details - COMPLETE RECEIPT FORMAT
+        document.getElementById('receipt_product_id').textContent = productId;
+        document.getElementById('receipt_product_name').textContent = productName;
+        document.getElementById('receipt_quantity').textContent = quantityNum;
+        document.getElementById('receipt_unit_price').textContent = 'Rs ' + unitPriceNum.toFixed(2);
+        document.getElementById('receipt_total').textContent = 'Rs ' + totalAmount.toFixed(2);
+        document.getElementById('receipt_paid').textContent = 'Rs ' + paidAmount.toFixed(2);
+        document.getElementById('receipt_change').textContent = 'Rs ' + changeNum.toFixed(2);
+        
+        receipt.style.display = 'block';
+        
+        // Scroll to receipt
+        receipt.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function displayChange(change) {
+        const changeDisplay = document.getElementById('change_display');
+        const changeAmount = document.getElementById('change_amount');
+        
+        changeAmount.textContent = parseFloat(change).toFixed(2);
+        changeDisplay.style.display = 'block';
+    }
+
+    function resetInterface() {
+        document.getElementById('product_id').value = '';
+        document.getElementById('quantity').value = 1;
+        resetDenominations();
+        document.getElementById('message_area').innerHTML = '';
+        document.getElementById('receipt').style.display = 'none';
+        document.getElementById('change_display').style.display = 'none';
+        
+        selectedProduct = null;
+        selectedProductName = null;
+        selectedProductPrice = null;
+        
+        document.querySelectorAll('.product-card').forEach(card => {
+            card.style.borderColor = 'var(--warm-beige)';
+        });
+        
+        showMessage('Interface reset. Please select a product and insert money.', 'success');
+    }
+
+    function resetDenominations() {
+        denominations = {500: 0, 200: 0, 100: 0, 50: 0, 20: 0, 10: 0, 5: 0};
+        updateDenominationDisplay();
+    }
+
+    function showMessage(message, type) {
+        const messageArea = document.getElementById('message_area');
+        messageArea.innerHTML = `<div class="message ${type}">${message}</div>`;
+    }
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    // Initialize
+    updateDenominationDisplay();
+</script>
+</body>
+</html>

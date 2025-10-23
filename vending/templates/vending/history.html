@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transaction History - Vending Machine</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/simple.css' %}">
+    <style>
+        /* Vintage Color Palette */
+        :root {
+            --vintage-cream: #F5F1E6;
+            --soft-peach: #FFE5D4;
+            --terra-cotta: #E27D60;
+            --warm-beige: #D8C3A5;
+            --dusty-rose: #D8A48F;
+            --muted-green: #A8C0A8;
+            --deep-brown: #8B7355;
+        }
+        
+        body {
+            background-color: var(--vintage-cream);
+            color: var(--deep-brown);
+            font-family: 'Georgia', serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .history-container {
+            max-width: 1000px;
+            margin: 20px auto;
+            padding: 25px;
+            background: linear-gradient(135deg, var(--vintage-cream), var(--soft-peach));
+            border-radius: 15px;
+            box-shadow: 0 8px 25px rgba(139, 115, 85, 0.15);
+            border: 2px solid var(--warm-beige);
+        }
+        
+        .history-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 25px;
+            background: linear-gradient(135deg, var(--warm-beige), var(--soft-peach));
+            border-radius: 12px;
+            color: var(--deep-brown);
+            box-shadow: 0 4px 15px rgba(139, 115, 85, 0.1);
+            position: relative;
+            overflow: hidden;
+            border: 2px solid var(--terra-cotta);
+        }
+
+        .title {
+            font-size: 2.5em;
+            margin: 0;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            font-weight: 700;
+            color: var(--deep-brown);
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            margin-top: 10px;
+            font-weight: 600;
+            color: var(--terra-cotta);
+            font-style: italic;
+        }
+
+        /* Floating Emojis */
+        .floating-emojis {
+            position: relative;
+            height: 60px;
+            margin: 20px 0;
+        }
+        
+        .floating-emoji {
+            position: absolute;
+            font-size: 1.6em;
+            animation: float 3s ease-in-out infinite;
+            opacity: 0.9;
+            filter: drop-shadow(0 0 6px rgba(139, 115, 85, 0.4));
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0px) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(12deg);
+            }
+        }
+        
+        .emoji-1 { left: 5%; animation-delay: 0s; }
+        .emoji-2 { left: 15%; animation-delay: 0.3s; }
+        .emoji-3 { left: 25%; animation-delay: 0.6s; }
+        .emoji-4 { left: 35%; animation-delay: 0.9s; }
+        .emoji-5 { left: 45%; animation-delay: 1.2s; }
+        .emoji-6 { left: 55%; animation-delay: 1.5s; }
+        .emoji-7 { left: 65%; animation-delay: 1.8s; }
+        .emoji-8 { left: 75%; animation-delay: 2.1s; }
+        .emoji-9 { left: 85%; animation-delay: 2.4s; }
+        .emoji-10 { left: 95%; animation-delay: 2.7s; }
+
+        /* Realistic Transaction List - No Boxes */
+        .transaction-list {
+            margin: 20px 0;
+        }
+
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            margin: 0;
+            border-bottom: 1px solid var(--warm-beige);
+            transition: all 0.2s ease;
+        }
+
+        .transaction-item:hover {
+            background: rgba(216, 195, 165, 0.2);
+            padding-left: 10px;
+            padding-right: 10px;
+            border-radius: 6px;
+        }
+
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+
+        .transaction-main {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            flex: 1;
+        }
+
+        .transaction-number {
+            font-weight: bold;
+            color: var(--terra-cotta);
+            font-size: 0.9em;
+            min-width: 40px;
+        }
+
+        .transaction-product {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex: 1;
+        }
+
+        .product-emoji {
+            font-size: 1.3em;
+        }
+
+        .product-details {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .product-name {
+            font-weight: 600;
+            color: var(--deep-brown);
+            font-size: 1em;
+        }
+
+        .product-quantity {
+            color: var(--terra-cotta);
+            font-size: 0.85em;
+            font-weight: 500;
+        }
+
+        .transaction-time {
+            color: var(--dusty-rose);
+            font-size: 0.8em;
+            font-weight: 500;
+            min-width: 120px;
+            text-align: right;
+        }
+
+        .transaction-amounts {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            min-width: 200px;
+            justify-content: flex-end;
+        }
+
+        .amount-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        .amount-label {
+            font-size: 0.75em;
+            color: var(--deep-brown);
+            margin-bottom: 2px;
+        }
+
+        .amount-value {
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+
+        .amount-inserted {
+            color: var(--muted-green);
+        }
+
+        .amount-required {
+            color: var(--terra-cotta);
+        }
+
+        .amount-change {
+            color: var(--dusty-rose);
+        }
+        
+        .back-button {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--terra-cotta), var(--dusty-rose));
+            color: var(--vintage-cream);
+            padding: 12px 25px;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: bold;
+            margin: 15px 0;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(226, 125, 96, 0.3);
+            border: 1px solid var(--warm-beige);
+        }
+        
+        .back-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(226, 125, 96, 0.4);
+            text-decoration: none;
+            color: var(--vintage-cream);
+            background: linear-gradient(135deg, var(--dusty-rose), var(--terra-cotta));
+        }
+        
+        .no-transactions {
+            text-align: center;
+            padding: 40px;
+            color: var(--deep-brown);
+            font-size: 1.1em;
+            background: linear-gradient(135deg, var(--soft-peach), var(--vintage-cream));
+            border-radius: 10px;
+            border: 2px dashed var(--warm-beige);
+        }
+        
+        .stats-bar {
+            background: linear-gradient(135deg, var(--soft-peach), var(--vintage-cream));
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(139, 115, 85, 0.1);
+            border: 1px solid var(--terra-cotta);
+        }
+        
+        .stat-item {
+            display: inline-block;
+            margin: 0 20px;
+            font-weight: bold;
+            color: var(--deep-brown);
+            font-size: 1em;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .history-container {
+                margin: 10px;
+                padding: 15px;
+            }
+            
+            .transaction-item {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+                padding: 15px 0;
+            }
+            
+            .transaction-main {
+                width: 100%;
+                justify-content: space-between;
+            }
+            
+            .transaction-amounts {
+                width: 100%;
+                justify-content: space-between;
+                min-width: auto;
+            }
+            
+            .transaction-time {
+                text-align: left;
+                min-width: auto;
+            }
+
+            .title {
+                font-size: 2em;
+            }
+            
+            .floating-emojis {
+                height: 50px;
+            }
+            
+            .floating-emoji {
+                font-size: 1.4em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .title {
+                font-size: 1.8em;
+            }
+            
+            .floating-emojis {
+                height: 40px;
+            }
+            
+            .floating-emoji {
+                font-size: 1.2em;
+            }
+            
+            .transaction-amounts {
+                flex-direction: column;
+                gap: 8px;
+                align-items: flex-start;
+            }
+            
+            .amount-item {
+                flex-direction: row;
+                gap: 8px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="history-container">
+        <div class="history-header">
+            <h1 class="title">📊 TRANSACTION HISTORY</h1>
+            <p class="subtitle">Vending Machine - Ebene Campus</p>
+            
+            <!-- Floating Food & Drink Emojis -->
+            <div class="floating-emojis">
+                <div class="floating-emoji emoji-1">🍕</div>
+                <div class="floating-emoji emoji-2">🍔</div>
+                <div class="floating-emoji emoji-3">🥤</div>
+                <div class="floating-emoji emoji-4">🍪</div>
+                <div class="floating-emoji emoji-5">🍩</div>
+                <div class="floating-emoji emoji-6">🧁</div>
+                <div class="floating-emoji emoji-7">🍫</div>
+                <div class="floating-emoji emoji-8">☕</div>
+                <div class="floating-emoji emoji-9">🍦</div>
+                <div class="floating-emoji emoji-10">🥪</div>
+            </div>
+        </div>
+
+        <a href="/" class="back-button">← Back to Vending Machine</a>
+
+        <div class="stats-bar">
+            <div class="stat-item">📈 Total Transactions: <span style="color: var(--muted-green);">{{ transaction_data|length }}</span></div>
+            <div class="stat-item">📅 <span id="currentDate"></span></div>
+        </div>
+
+        {% if transaction_data %}
+            <div class="transaction-list">
+                {% for data in transaction_data %}
+                <div class="transaction-item">
+                    <div class="transaction-main">
+                        <div class="transaction-number">#{{ forloop.revcounter }}</div>
+                        <div class="transaction-product">
+                            <span class="product-emoji">
+                                {% for product in data.purchased_products %}
+                                    {% if "cake" in product.name.lower %}🎂
+                                    {% elif "chocolate" in product.name.lower %}🍫
+                                    {% elif "drink" in product.name.lower %}🥤
+                                    {% elif "cookie" in product.name.lower %}🍪
+                                    {% elif "donut" in product.name.lower %}🍩
+                                    {% else %}🛍️{% endif %}
+                                {% endfor %}
+                            </span>
+                            <div class="product-details">
+                                <div class="product-name">
+                                    {% for product in data.purchased_products %}
+                                        {{ product.name }}
+                                    {% endfor %}
+                                </div>
+                                <div class="product-quantity">
+                                    {% for product in data.purchased_products %}
+                                        {{ product.quantity }}x • Rs {{ product.price }} each
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="transaction-time">
+                            {{ data.transaction.timestamp|date:"M d, H:i" }}
+                        </div>
+                    </div>
+                    <div class="transaction-amounts">
+                        <div class="amount-item">
+                            <div class="amount-label">INSERTED</div>
+                            <div class="amount-value amount-inserted">Rs {{ data.transaction.total_amount_inserted|floatformat:2 }}</div>
+                        </div>
+                        <div class="amount-item">
+                            <div class="amount-label">REQUIRED</div>
+                            <div class="amount-value amount-required">Rs {{ data.transaction.amount_required|floatformat:2 }}</div>
+                        </div>
+                        <div class="amount-item">
+                            <div class="amount-label">CHANGE</div>
+                            <div class="amount-value amount-change">Rs {{ data.transaction.change_returned|floatformat:2 }}</div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="no-transactions">
+                <h3>📭 No Transactions Yet</h3>
+                <p>Make some purchases in the vending machine to see transaction history here!</p>
+            </div>
+        {% endif %}
+
+        <div style="text-align: center; margin-top: 20px;">
+            <a href="/" class="back-button">← Back to Vending Machine</a>
+        </div>
+    </div>
+
+    <script>
+        // Add current date to stats
+        document.addEventListener('DOMContentLoaded', function() {
+            const currentDate = new Date().toLocaleDateString('en-US', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            
+            document.getElementById('currentDate').textContent = currentDate;
+        });
+
+        // Add smooth scrolling animation
+        document.querySelectorAll('.back-button').forEach(button => {
+            button.addEventListener('click', function(e) {
+                e.preventDefault();
+                document.body.style.opacity = '0.8';
+                setTimeout(() => {
+                    window.location.href = this.href;
+                }, 300);
+            });
+        });
+    </script>
+</body>
+</html>
